@@ -18,16 +18,16 @@ db: venv/bin/activate ## Run migrations
 	. venv/bin/activate; python manage.py migrate
 
 python-flake:
-	-flake8 *.py
-	-flake8 apps/accounts/*.py
-	-flake8 apps/dialogs/*.py
-	-flake8 $(PROJECT)/*.py --exclude settings.py
+	-flake8 *.py --max-line-length 100
+	-flake8 apps/accounts/*.py --max-line-length 100
+	-flake8 apps/dialogs/*.py --max-line-length 100
+	-flake8 $(PROJECT)/*.py --max-line-length 100
 
 python-mypy:
-	-mypy *.py
-	-mypy apps/accounts/*.py
-	-mypy apps/dialogs/*.py
-	-mypy $(PROJECT)/*.py
+	-mypy *.py --ignore_missing_imports True
+	-mypy apps/accounts/*.py --ignore_missing_imports True
+	-mypy apps/dialogs/*.py --ignore_missing_imports True
+	-mypy $(PROJECT)/*.py --ignore_missing_imports True
 
 python-black:
 	-black *.py
