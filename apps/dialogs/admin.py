@@ -13,7 +13,7 @@ class ThreadAdmin(admin.ModelAdmin):
 
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ("sender", "thread", "text", "created_at")
+    list_display = ("sender", "thread", "is_read", "created_at")
     list_filter = ("created_at", "updated_at")
     search_fields = ("sender", "thread")
     ordering = ("created_at",)

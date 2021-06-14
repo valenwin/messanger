@@ -11,4 +11,7 @@ urlpatterns = [
     path("about-us", views.about_us, name="about_us"),
     path("authors", views.authors, name="authors"),
     path("contacts", views.contacts, name="contacts"),
+    path(
+        "accounts/", include(("apps.accounts.urls", "accounts"), namespace="accounts")
+    ),
 ]
