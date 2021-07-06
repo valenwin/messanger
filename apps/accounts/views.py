@@ -7,7 +7,7 @@ from django.contrib.auth.views import (
     PasswordResetCompleteView,
 )
 from django.contrib.messages.views import SuccessMessageMixin
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, TemplateView
 from django.views.generic.edit import CreateView
@@ -64,7 +64,3 @@ class CustomUserSignUpView(SuccessMessageMixin, CreateView):
     success_url = reverse_lazy("accounts:sign_in")
     form_class = CustomUserRegisterForm
     success_message = "Your profile was created successfully"
-
-
-def sign_up(request):
-    return render(request, "signup.html")

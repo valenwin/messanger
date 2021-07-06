@@ -25,10 +25,11 @@
 
 6 - API:<br />
 
-`/api/v1/threads/` - GET threads list, POST thread <br />
 `/api/v1/threads/?page=1` - pagination <br />
+
+`/api/v1/threads/` - GET threads list, POST thread <br />
 `/api/v1/threads/<pk>/` - GET, PUT, DELETE thread <br />
-`/api/v1/threads/<pk>/messages/` - GET messages list for the thread <br /> +
-`/api/v1/threads/<pk>/messages/read/` - SET messages read=True if False <br /> +
-`/api/v1/threads/<pk>/messages/create/` - POST message <br /> +
-`/api/v1/messages/<pk>/` - GET, PUT, DELETE the message <br /> +
+
+`/api/v1/threads/<pk>/messages/` - GET messages list for the thread, POST message for the thread <br />
+`/api/v1/threads/<pk>/messages/read/` - SET messages read=True if False <br />
+`/api/v1/messages/<pk>/` - GET, PUT, DELETE the message <br />
