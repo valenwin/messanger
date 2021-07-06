@@ -4,7 +4,9 @@ from .managers import MessageManager
 
 
 class Thread(models.Model):
-    participants = models.ManyToManyField(settings.AUTH_USER_MODEL)
+    participants = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name="user_threads", blank=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -14,8 +16,15 @@ class Thread(models.Model):
 
 class Message(models.Model):
     text = models.TextField()
-    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    thread = models.ForeignKey(Thread, on_delete=models.CASCADE)
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="sender_messages",
+        null=True,
+    )
+    thread = models.ForeignKey(
+        Thread, on_delete=models.CASCADE, related_name="thread_messages"
+    )
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
