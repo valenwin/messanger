@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     # installed apps
     "debug_toolbar",
     "crispy_forms",
+    "rest_framework",
     # custom apps
     "apps.accounts",
     "apps.dialogs",
@@ -141,12 +142,24 @@ AUTH_USER_MODEL = "accounts.User"
 AUTHENTICATION_BACKENDS = ["apps.accounts.backends.EmailBackend"]
 LOGIN_REDIRECT_URL = reverse_lazy("accounts:sign_in_success")
 
-# for email sending (reset password)
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_HOST_USER = env.str('EMAIL_HOST_USER')
-# EMAIL_HOST_PASSWORD = env.str('EMAIL_HOST_PASSWORD')
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_jwt.authentication.JSONWebTokenAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 5,
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ],
+    "DEFAULT_PARSER_CLASSES": [
+        "rest_framework.parsers.JSONParser",
+    ],
+    "TEST_REQUEST_DEFAULT_FORMAT": "json",
+}
 
 # for testing in console
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

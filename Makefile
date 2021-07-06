@@ -17,21 +17,27 @@ run: venv/bin/activate ## Run
 db: venv/bin/activate ## Run migrations
 	. venv/bin/activate; python manage.py migrate
 
-python-flake:
+flake:
 	-flake8 *.py --max-line-length 100
 	-flake8 apps/accounts/*.py --max-line-length 100
+	-flake8 apps/accounts/api/*.py --max-line-length 100
 	-flake8 apps/dialogs/*.py --max-line-length 100
+	-flake8 apps/dialogs/api/*.py --max-line-length 100
 	-flake8 $(PROJECT)/*.py --max-line-length 100
 
-python-mypy:
+mypy:
 	-mypy *.py --ignore_missing_imports True
 	-mypy apps/accounts/*.py --ignore_missing_imports True
+	-mypy apps/accounts/api/*.py --ignore_missing_imports True
 	-mypy apps/dialogs/*.py --ignore_missing_imports True
+	-mypy apps/dialogs/api/*.py --ignore_missing_imports True
 	-mypy $(PROJECT)/*.py --ignore_missing_imports True
 
-python-black:
+black:
 	-black *.py
 	-black apps/accounts/*.py
+	-black apps/accounts/api/*.py
 	-black apps/dialogs/*.py
+	-black apps/dialogs/api/*.py
 	-black $(PROJECT)/*.py
 
