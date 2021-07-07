@@ -12,6 +12,11 @@ class Thread(models.Model):
 
     class Meta:
         ordering = ("-created_at",)
+        verbose_name = "Thread"
+        verbose_name_plural = "Threads"
+
+    def get_unread_messages(self):
+        return Message.objects.filter(is_read=False)
 
 
 class Message(models.Model):
@@ -33,6 +38,8 @@ class Message(models.Model):
 
     class Meta:
         ordering = ("-created_at",)
+        verbose_name = "Message"
+        verbose_name_plural = "Messages"
 
     def __str__(self):
         return (

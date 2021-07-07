@@ -3,7 +3,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
-from .permissions import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly, IsParticipant
 from ..models import Thread, Message
 
 from .serializers import ThreadSerializer, MessageSerializer
@@ -29,6 +29,7 @@ class ThreadDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     queryset = Thread.objects.all()
     serializer_class = ThreadSerializer
+    permission_classes = [IsParticipant]
 
     def get(self, request, *args, **kwargs):
         """

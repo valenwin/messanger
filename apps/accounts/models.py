@@ -16,6 +16,8 @@ class User(AbstractUser):
 
     class Meta:
         ordering = ("-created_at",)
+        verbose_name = "User"
+        verbose_name_plural = "Users"
 
     def get_absolute_url(self):
         return reverse_lazy("accounts:profile", kwargs={"pk": self.pk})
