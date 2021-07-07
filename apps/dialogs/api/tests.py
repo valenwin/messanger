@@ -41,6 +41,18 @@ class ThreadTestCase(APITestCase):
         self.thread_details_url = reverse(
             "api_dialogs:thread_details", kwargs={"pk": self.thread.id}
         )
+        self.messages_list_url = reverse(
+            "api_dialogs:messages_list", kwargs={"pk": self.thread.id}
+        )
+        self.message_details_url = reverse(
+            "api_dialogs:message_details", kwargs={"pk": self.message.id}
+        )
+
+    # @mock.patch('rest_framework_jwt.authentication.RefreshJSONWebTokenSerializer.validate')
+    # def test_token_expiry_refresh(self, validate_mock):
+    #     validate_mock.side_effect = serializers.ValidationError('Refresh has expired.')
+    #     response = self.client.post('/jwt_login/')
+    #     self.assertEquals(response.status, 400)
 
     def _get_user_token(self, username="testUsername", password="testPassword"):
         response = self.client.post(
@@ -48,12 +60,13 @@ class ThreadTestCase(APITestCase):
             {"username": username, "password": password},
             format="json",
         )
+        print(response)
         response_data = response.json()
 
         return "JWT {}".format(response_data.get("token", ""))
 
     def test_get_threads_list_for_user(self):
-        user = User.objects.first()
+        user = User.objects.get(pk=1)
         # call method
         # Force authenticate
         result = self.client.get(
@@ -111,6 +124,7 @@ class ThreadTestCase(APITestCase):
             path=self.threads_list_url,
             data=json.dumps(valid_payload),
             content_type="application/json",
+            HTTP_AUTHORIZATION=self._get_user_token(username=user.id),
         )
         # check results
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -136,6 +150,17 @@ class ThreadTestCase(APITestCase):
         result = self.client.get(self.thread_details_url)
         # check results
         self.assertEqual(result.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_thread_details_not_exists(self):
+        user = User.objects.first()
+        # call method
+        # Force authenticate
+        result = self.client.get(
+            reverse("api_dialogs:thread_details", kwargs={"pk": 2}),
+            HTTP_AUTHORIZATION=self._get_user_token(username=user.username),
+        )
+        # check results
+        self.assertEqual(result.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_put_thread_details_for_user(self):
         user = User.objects.first()
@@ -168,6 +193,7 @@ class ThreadTestCase(APITestCase):
             path=self.thread_details_url,
             data=json.dumps(valid_payload),
             content_type="application/json",
+            HTTP_AUTHORIZATION=self._get_user_token(username=user.id),
         )
         # check results
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -196,12 +222,10 @@ class ThreadTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_delete_thread_not_exists_for_user(self):
-        """TODO: check why 204"""
         user = User.objects.first()
         # call method
         response = self.client.delete(
-            path=self.thread_details_url,
-            kwargs={"pk": 144},
+            path=reverse("api_dialogs:thread_details", kwargs={"pk": 2}),
             HTTP_AUTHORIZATION=self._get_user_token(username=user.username),
         )
         # check results
@@ -233,7 +257,235 @@ class ThreadTestCase(APITestCase):
         self.assertEqual(data.get("participants"), [])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(result1.status_code, status.HTTP_200_OK)
-        self.assertEqual(result2.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(result2.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_thread_messages_list_for_user(self):
+        user = User.objects.first()
+        # call method
+        # Force authenticate
+        result = self.client.get(
+            self.messages_list_url,
+            HTTP_AUTHORIZATION=self._get_user_token(username=user.username),
+        )
+        # check results
+        self.assertEqual(result.status_code, status.HTTP_200_OK)
+        data = result.json()
+        self.assertEqual(data.get("count"), 1)
+        self.assertEqual(data["results"][0]["id"], 1)
+        self.assertEqual(data["results"][0]["text"], "hello")
+        self.assertEqual(data["results"][0]["sender"], {"id": user.id})
+        self.assertEqual(data["results"][0]["is_read"], False)
+
+    def test_get_thread_messages_list_for_user_unauthorized(self):
+        user = User.objects.first()
+        # call method
+        # Fail due to not authorization
+        result = self.client.get(
+            self.messages_list_url,
+            HTTP_AUTHORIZATION=self._get_user_token(username=user.id),
+        )
+        # check results
+        self.assertEqual(result.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_thread_messages_list_user_not_thread_participant(self):
+        """TODO: check why 401, not 400"""
+        new_user = User.objects.create(
+            username="test3",
+            first_name="Name3",
+            last_name="Lname3",
+            email="test3@com",
+        )
+        print(new_user.username)
+        print(new_user in self.message.thread.participants.all())
+        # call method
+        # Force authenticate
+        result = self.client.get(
+            self.messages_list_url,
+            HTTP_AUTHORIZATION=self._get_user_token(username=new_user.username),
+        )
+        print(result.json())
+        # check results
+        self.assertEqual(result.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_message_for_thread_user(self):
+        user = User.objects.first()
+        valid_payload = {"text": "hello my friend"}
+        # call method
+        response = self.client.post(
+            path=self.messages_list_url,
+            data=json.dumps(valid_payload),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=self._get_user_token(username=user.username),
+        )
+        # check results
+        data = response.json()
+        self.assertEqual(data.get("id"), 2)
+        self.assertEqual(data.get("text"), "hello my friend")
+        self.assertEqual(data.get("sender"), {"id": user.id})
+        self.assertEqual(data.get("is_read"), False)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_message_for_thread_user_unauthorized(self):
+        user = User.objects.first()
+        valid_payload = {"text": "have a nice day"}
+        # call method
+        response = self.client.post(
+            path=self.messages_list_url,
+            data=json.dumps(valid_payload),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=self._get_user_token(username=user.id),
+        )
+        print(response.json())
+        # check results
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_create_message_user_not_thread_participant(self):
+        """TODO: check why 401, not 400"""
+        user = User.objects.first()
+        new_user = User.objects.create(
+            username="test3",
+            first_name="Name3",
+            last_name="Lname3",
+            email="test3@com",
+        )
+        print(new_user.username)
+        print(new_user in self.message.thread.participants.all())
+        print(user in self.message.thread.participants.all())
+        # call method
+        # Force authenticate
+        valid_payload = {"text": "have a nice day"}
+        # call method
+        response = self.client.post(
+            path=self.messages_list_url,
+            data=json.dumps(valid_payload),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=self._get_user_token(username=new_user.username),
+        )
+        print(response.status_code)
+        # check results
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_message_details_for_user(self):
+        user = User.objects.first()
+        # call method
+        result = self.client.get(
+            self.message_details_url,
+            HTTP_AUTHORIZATION=self._get_user_token(username=user.username),
+        )
+        # check results
+        self.assertEqual(result.status_code, status.HTTP_200_OK)
+        data = result.json()
+        self.assertEqual(data.get("id"), 1)
+        self.assertEqual(data.get("text"), "hello")
+        self.assertEqual(data.get("sender"), {"id": user.id})
+        self.assertEqual(data.get("is_read"), False)
+
+    def test_get_message_details_not_exist(self):
+        user = User.objects.first()
+        # call method
+        result = self.client.get(
+            reverse("api_dialogs:message_details", kwargs={"pk": 2}),
+            HTTP_AUTHORIZATION=self._get_user_token(username=user.username),
+        )
+        # check results
+        self.assertEqual(result.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_message_details_for_user_unauthorized(self):
+        user = User.objects.first()
+        # call method
+        result = self.client.get(
+            self.message_details_url,
+            HTTP_AUTHORIZATION=self._get_user_token(username=user.id),
+        )
+        # check results
+        self.assertEqual(result.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_message_details_user_not_sender(self):
+        user = User.objects.get(pk=1)
+        print(user)
+        # call method
+        result = self.client.get(
+            self.message_details_url,
+            HTTP_AUTHORIZATION=self._get_user_token(username=user.username),
+        )
+        print(result)
+        # check results
+        self.assertEqual(result.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_put_message_details_for_thread_user(self):
+        user = User.objects.first()
+        valid_payload = {"text": "hello again"}
+        # call method
+        response = self.client.put(
+            path=self.message_details_url,
+            data=json.dumps(valid_payload),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=self._get_user_token(username=user.username),
+        )
+        # check results
+        data = response.json()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(data.get("text"), "hello again")
+        self.assertEqual(data.get("sender"), {"id": user.id})
+        self.assertEqual(data.get("is_read"), False)
+
+    def test_put_message_details_for_thread_user_unauthorized(self):
+        user = User.objects.first()
+        valid_payload = {"text": "hello again"}
+        # call method
+        response = self.client.put(
+            path=self.thread_details_url,
+            data=json.dumps(valid_payload),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=self._get_user_token(username=user.id),
+        )
+        # check results
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_put_message_details_user_not_sender(self):
+        """TODO: check why 403, not 400"""
+        user = User.objects.get(pk=1)
+        valid_payload = {"text": "hello again"}
+        # call method
+        response = self.client.put(
+            path=self.message_details_url,
+            data=json.dumps(valid_payload),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=self._get_user_token(username=user.username),
+        )
+        # check results
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_delete_message_details_for_thread_user(self):
+        user = User.objects.first()
+        # call method
+        response = self.client.delete(
+            path=self.message_details_url,
+            HTTP_AUTHORIZATION=self._get_user_token(username=user.username),
+        )
+        # check results
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_message_details_not_exists_for_user(self):
+        user = User.objects.first()
+        # call method
+        response = self.client.delete(
+            path=reverse("api_dialogs:message_details", kwargs={"pk": 2}),
+            HTTP_AUTHORIZATION=self._get_user_token(username=user.username),
+        )
+        # check results
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_message_details_user_not_sender(self):
+        """TODO: check why 403"""
+        user = User.objects.get(pk=1)
+        # call method
+        response = self.client.delete(
+            path=self.message_details_url,
+            HTTP_AUTHORIZATION=self._get_user_token(username=user.username),
+        )
+        # check results
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @patch.object(Thread, "get_unread_messages", side_effect=mocked_function)
     def test_get_unread_messages(self, mocked_get_unread_messages):

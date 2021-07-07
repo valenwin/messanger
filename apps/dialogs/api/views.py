@@ -1,9 +1,10 @@
 from rest_framework import generics, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .permissions import IsOwnerOrReadOnly, IsParticipant
+from .permissions import IsSenderThreadParticipant, IsMessageOwner, IsParticipant
 from ..models import Thread, Message
 
 from .serializers import ThreadSerializer, MessageSerializer
@@ -45,7 +46,7 @@ class ThreadDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class MessagesView(generics.ListCreateAPIView):
     serializer_class = MessageSerializer
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsSenderThreadParticipant, IsAuthenticated]
 
     def get_queryset(self):
         thread = get_object_or_404(Thread, pk=self.kwargs.get("pk"))
@@ -68,12 +69,12 @@ class MessagesView(generics.ListCreateAPIView):
 class MessageDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsMessageOwner]
 
 
 class MessageReadView(generics.ListAPIView):
     serializer_class = MessageSerializer
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsSenderThreadParticipant]
 
     def get_queryset(self):
         thread = get_object_or_404(Thread, pk=self.kwargs.get("pk"))
