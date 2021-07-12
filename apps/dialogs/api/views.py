@@ -4,7 +4,12 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .permissions import IsSenderThreadParticipant, IsMessageOwner, IsParticipant
+from .permissions import (
+    IsSenderThreadParticipant,
+    IsMessageOwner,
+    IsParticipant,
+    IsThreadParticipant,
+)
 from ..models import Thread, Message
 
 from .serializers import ThreadSerializer, MessageSerializer
@@ -69,7 +74,7 @@ class MessagesView(generics.ListCreateAPIView):
 class MessageDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
-    permission_classes = [IsMessageOwner]
+    permission_classes = [IsMessageOwner, IsThreadParticipant]
 
 
 class MessageReadView(generics.ListAPIView):

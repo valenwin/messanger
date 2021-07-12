@@ -9,8 +9,6 @@ from django.db.models import Q
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
-from apps.accounts.models import User
-
 User = get_user_model()
 
 
@@ -31,7 +29,7 @@ class CustomPasswordResetForm(PasswordResetForm):
             User.objects.get(
                 Q(username__iexact=username_email) | Q(email__iexact=username_email)
             )
-        except get_user_model().DoesNotExist:
+        except User.DoesNotExist:
             raise ValidationError(
                 "The username/email you entered is not registered. "
                 "Please enter valid username/email."
@@ -45,7 +43,7 @@ class CustomPasswordResetForm(PasswordResetForm):
         that prevent inactive users and users with unusable passwords from
         resetting their password.
         """
-        active_users = get_user_model()._default_manager.filter(
+        active_users = User._default_manager.filter(
             Q(username__iexact=username_email) | Q(email__iexact=username_email),
             is_active=True,
         )

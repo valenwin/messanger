@@ -48,19 +48,12 @@ class ThreadTestCase(APITestCase):
             "api_dialogs:message_details", kwargs={"pk": self.message.id}
         )
 
-    # @mock.patch('rest_framework_jwt.authentication.RefreshJSONWebTokenSerializer.validate')
-    # def test_token_expiry_refresh(self, validate_mock):
-    #     validate_mock.side_effect = serializers.ValidationError('Refresh has expired.')
-    #     response = self.client.post('/jwt_login/')
-    #     self.assertEquals(response.status, 400)
-
     def _get_user_token(self, username="testUsername", password="testPassword"):
         response = self.client.post(
             self.login_url,
             {"username": username, "password": password},
             format="json",
         )
-        print(response)
         response_data = response.json()
 
         return "JWT {}".format(response_data.get("token", ""))
@@ -295,15 +288,12 @@ class ThreadTestCase(APITestCase):
             last_name="Lname3",
             email="test3@com",
         )
-        print(new_user.username)
-        print(new_user in self.message.thread.participants.all())
         # call method
         # Force authenticate
         result = self.client.get(
             self.messages_list_url,
             HTTP_AUTHORIZATION=self._get_user_token(username=new_user.username),
         )
-        print(result.json())
         # check results
         self.assertEqual(result.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -335,22 +325,17 @@ class ThreadTestCase(APITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=self._get_user_token(username=user.id),
         )
-        print(response.json())
         # check results
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_create_message_user_not_thread_participant(self):
         """TODO: check why 401, not 400"""
-        user = User.objects.first()
         new_user = User.objects.create(
             username="test3",
             first_name="Name3",
             last_name="Lname3",
             email="test3@com",
         )
-        print(new_user.username)
-        print(new_user in self.message.thread.participants.all())
-        print(user in self.message.thread.participants.all())
         # call method
         # Force authenticate
         valid_payload = {"text": "have a nice day"}
@@ -361,7 +346,6 @@ class ThreadTestCase(APITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=self._get_user_token(username=new_user.username),
         )
-        print(response.status_code)
         # check results
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -402,13 +386,11 @@ class ThreadTestCase(APITestCase):
 
     def test_get_message_details_user_not_sender(self):
         user = User.objects.get(pk=1)
-        print(user)
         # call method
         result = self.client.get(
             self.message_details_url,
             HTTP_AUTHORIZATION=self._get_user_token(username=user.username),
         )
-        print(result)
         # check results
         self.assertEqual(result.status_code, status.HTTP_401_UNAUTHORIZED)
 
