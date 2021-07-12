@@ -33,3 +33,5 @@
 `/api/v1/threads/<pk>/messages/` - GET messages list for the thread, POST message for the thread <br />
 `/api/v1/threads/<pk>/messages/read/` - SET messages read=True if False <br />
 `/api/v1/messages/<pk>/` - GET, PUT, DELETE the message <br />
+
+./manage.py dumpdata dialogs.thread --format=json --indent=4 > threads.json
