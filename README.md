@@ -1,4 +1,4 @@
-# **Yalantis Django** </br>
+# **Messanger / Django** </br>
 
 ### Deploy project on your local machine </br>
 
